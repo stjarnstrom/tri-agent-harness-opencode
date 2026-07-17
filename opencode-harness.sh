@@ -18,8 +18,6 @@
 #
 # Setup (first time):
 #   bun install && bun run setup
-#
-# See README.md — Retrospector/learning loop is not included in this repo.
 
 set -euo pipefail
 

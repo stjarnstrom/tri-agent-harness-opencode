@@ -5,7 +5,7 @@ const plugin = require('./harness/eslint-plugin-harness');
 
 module.exports = [
   {
-    ignores: ['**/_ref/**', '**/node_modules/**', '**/dist/**', '**/build/**'],
+    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**'],
   },
   {
     plugins: { harness: plugin },

@@ -371,7 +371,7 @@
           <path d="M 715 55 C 715 18, 420 18, 360 50" fill="none" stroke="#52616e" stroke-width="1.2" stroke-dasharray="3 4" marker-end="url(#arr)"/>
           <text x="537" y="14" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#52616e">PASS — next sprint</text>
 
-          <!-- learn wire: retrospector back to the start -->
+          <!-- learn wire: anti-slop back to the start -->
           <path d="M 870 101 C 870 225, 120 225, 92 106" fill="none" stroke="#d14d21" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arr-l)"/>
           <text x="480" y="232" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#d14d21">harness/LESSONS.md — required reading for every agent, every run</text>
 
@@ -468,8 +468,9 @@
 <span class="k">cp</span> .env.example .env.local</pre>
             </div>
             <p>
-              For a fuller learning loop (Retrospector), see sibling
-              <a href="https://github.com/stjarnstrom/tri-agent-harness">Claude Code harness</a>.
+              Recurring QA failures feed the anti-slop toolbox
+              (<code>bun gc:weekly</code>) so you can promote patterns into
+              lint rules between runs.
             </p>
           </div>
         </div>
@@ -606,11 +607,11 @@
           <span class="wire">docs/qa-report-sprint-N.md · sprint status updated</span>
         </div>
         <div class="event learn-dot">
-          <span class="tplus">not included</span>
-          <h3>Retrospective</h3>
-          <p>This OpenCode repo does not run the Retrospector. For end-of-run
-          learning (lessons ledger, guardrail proposals), use the
-          <a href="https://github.com/stjarnstrom/tri-agent-harness">Claude Code harness</a>.</p>
+          <span class="tplus">weekly</span>
+          <h3>Anti-slop review</h3>
+          <p>QA failures land in <code>.gc-cache/</code>. Run
+          <code>bun gc:weekly</code> to review recurring patterns and promote
+          them into lint rules or guardrails before the next product run.</p>
         </div>
       </div>
       <p>

@@ -140,7 +140,7 @@ After any completed phase:
 1. Ensure canonical files exist and reflect the latest state.
 2. Re-run `./opencode-harness.sh "<same prompt>" [max_qa_rounds]`.
 
-**Not included in this repo:** Retrospector / end-of-run learning loop. Sibling tools: [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness), [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor).
+Sibling tools (separate repos): [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness), [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor).
 
 ## Conflict Resolution
 

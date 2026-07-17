@@ -53,9 +53,5 @@ playwright/.cache/
 # Local overrides
 *.local
 
-# SDK orchestrator runtime metadata (regenerated per run)
-docs/orchestrator-state.json
-docs/orchestrator-events.jsonl
-
-# Reference implementations (not part of the combined harness)
-_ref/
+# Workflow handoff (regenerated per run)
+docs/workflow-handoff.json
