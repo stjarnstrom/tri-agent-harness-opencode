@@ -1,6 +1,6 @@
-# Billing Domain — Agent Instructions (CLAUDE.md)
+# Billing Domain — Agent Instructions (AGENTS.md)
 
-You are working inside the `billing` package. Claude Code reads this file automatically when you work in this directory. It contains rules specific to billing code that don't apply elsewhere in the project.
+You are working inside the `billing` package. Read this file before changing billing code. It contains rules specific to billing that don't apply elsewhere in the project.
 
 ## What This Package Does
 

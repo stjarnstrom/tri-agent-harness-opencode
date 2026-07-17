@@ -1,15 +1,12 @@
-# Agent Instructions — Tool-Agnostic Core Rules
+# Agent Instructions — OpenCode Harness Core Rules
 
-These rules apply regardless of which AI coding agent you use (Claude Code, Cursor, OpenCode, etc.).
-Each tool reads this file in its own way:
-
-- **Claude Code**: Referenced via `CLAUDE.md` → "Read `harness/AGENT-INSTRUCTIONS.md`"
-- **Cursor**: Referenced via `.cursorrules` → same content adapted for Cursor's format
-- **OpenCode**: Loaded via `opencode.jsonc` → `instructions` array; phase agents in `.opencode/agents/`
+These rules apply to every OpenCode agent session in this repo.
+They are loaded via `opencode.jsonc` → `instructions` (along with root `AGENTS.md`).
+Phase agents live in `.opencode/agents/`.
 
 ## Domain Packages
 
-When working inside a domain package (e.g. `packages/billing/`), read that package's `CLAUDE.md` before making changes. Claude Code loads these automatically; Cursor, OpenCode, and other tools must read them explicitly.
+When working inside a domain package (e.g. `packages/billing/`), read that package's `AGENTS.md` before making changes.
 
 ## The Four Rules Every Agent Must Follow
 
@@ -18,16 +15,14 @@ When working inside a domain package (e.g. `packages/billing/`), read that packa
 Never read, write, or modify files outside the project root without explicit user permission.
 The pre-commit hook (`harness/hooks/pre-commit`) enforces this at git level — but don't rely on it as your only guardrail. If you're about to `cat /etc/passwd` or `rm -rf ~/Downloads`, stop and ask first.
 
-**Network:** In Claude Code, sandboxed Bash commands can only reach the domains allowlisted in `.claude/settings.json` (`sandbox.network.allowedDomains`) — npm registry, Playwright CDN, Anthropic API, GitHub, Google Fonts, and localhost. If a build step fails on a blocked domain, don't work around the sandbox — surface it so the domain can be added to the allowlist deliberately.
-
 **Secrets:** Never read, paste, or hardcode real credentials. The workflow:
 
 1. Read `.env.example` for variable **names** and placeholder shapes — that file is safe to commit.
-2. Real values live in `.env.local` or `.env` (gitignored, listed in `.cursorignore`).
+2. Real values live in `.env.local` or `.env` (gitignored).
 3. Reference secrets in code as `process.env.VAR_NAME` — never as string literals.
 4. If you need a new env var, add it to `.env.example` with a dummy value and tell the user to set the real one locally.
 
-The pre-commit hook blocks staging `.env` files and scans for leaked keys. OpenCode denies reads of `.env` and credential paths via `opencode.jsonc` `permission.read`; Cursor uses `.cursorignore` (install via `bun run setup`).
+The pre-commit hook blocks staging `.env` files and scans for leaked keys. OpenCode denies reads of `.env` and credential paths via `opencode.jsonc` `permission.read`.
 
 ### 2. Lints Are Instructions, Not Diagnostics
 
@@ -56,15 +51,9 @@ If you correct yourself for the same mistake twice in a session:
 
 Junk context is deny-listed, not just gitignored. Dependencies, build output,
 lockfiles, coverage reports, and minified/generated artifacts are never source
-of truth — reading them burns tokens and degrades retrieval. Each tool enforces
-the same list its own way:
+of truth — reading them burns tokens and degrades retrieval.
 
-- **Claude Code**: `permissions.deny` `Read(...)` rules in `.claude/settings.json`.
-  There is no `.claudeignore` — deny rules are the native mechanism, they take
-  precedence over allow rules, and they also apply to Grep/Glob and recognized
-  file commands in Bash.
-- **Cursor**: `.cursorignore` (installed by `bun run setup`).
-- **OpenCode**: `permission.read` denies in `opencode.jsonc`.
+OpenCode enforces this via `permission.read` denies in `opencode.jsonc`.
 
 The denied set: `node_modules/`, `dist/`, `build/`, `.next/`, `out/`,
 `.turbo/`, `coverage/`, `.nyc_output/`, `playwright-report/`, `test-results/`,

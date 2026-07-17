@@ -35,8 +35,6 @@ This project uses an **OpenCode-only harness** with two layers:
 
 Agents communicate through files in `docs/`. Personas in `agents/`. Criteria in `agents/criteria/`. OpenCode entry points in `.opencode/agents/`.
 
-**Not included in this repo:** Retrospector / end-of-run learning loop. For that, use the [Claude Code harness](https://github.com/stjarnstrom/tri-agent-harness).
-
 ### Model policy (OpenCode)
 
 Autonomous runs use the OpenCode CLI (`opencode run`). Default model: `anthropic/claude-sonnet-4-5`.
@@ -45,7 +43,7 @@ Override with `HARNESS_MODEL` on the `./opencode-harness.sh` command. Optional: 
 
 ### Environment (always on)
 - Git pre-commit hook: sandbox, lints, secret scan (`bun run setup`)
-- Context hygiene via `opencode.jsonc` (`permission.read` deny rules) and `.cursorignore` — see "Context Hygiene" in `harness/AGENT-INSTRUCTIONS.md`
+- Context hygiene via `opencode.jsonc` (`permission.read` deny rules) — see "Context Hygiene" in `harness/AGENT-INSTRUCTIONS.md`
 - ESLint harness plugin: lints are agent instructions (`bun lint:harness`)
 - Review personas: `review-personas/` for focused code review
 - Anti-slop loop: recurring QA failures → new guardrails (`bun gc:weekly`)
@@ -144,7 +142,7 @@ cd app && npm install && npm run dev
 bun lint:harness
 
 # Tests
-npm run test:harness   # harness orchestrator tests only
+npm run test:harness   # harness helper tests only
 cd app && npx playwright test   # app E2E (after Generator scaffolds test:e2e)
 ```
 
@@ -176,14 +174,11 @@ HARNESS_MODEL=anthropic/claude-sonnet-4-5 ./opencode-harness.sh "..."  # overrid
 HARNESS_OPENCODE_ATTACH=http://localhost:4096 ./opencode-harness.sh "..."  # attach to serve
 ```
 
-**Other harness variants:**
-
-- [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness) — Claude Code, includes Retrospector/learning loop
-- [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor) — Cursor CLI
+**Sibling tools** (separate repos): [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness) (Claude Code), [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor) (Cursor CLI).
 
 **Guardrails:**
 
-- `bun run setup` — Install git hooks and `.cursorignore`
+- `bun run setup` — Install git hooks
 - `bun lint:harness` — Run agent-prompt lint rules
 - `bun gc:weekly` — Anti-slop review of recurring failures
 

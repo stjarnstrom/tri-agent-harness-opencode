@@ -271,7 +271,7 @@ Include specific examples of what's working and what isn't.]
 
 ## Recommendation
 
-[If PASS]: Sprint [N] passes QA. Run `/project:build` to begin Sprint [N+1].
+[If PASS]: Sprint [N] passes QA. Re-run `./opencode-harness.sh` to begin Sprint [N+1].
 Address non-blocking issues at the start of the next sprint.
 
 [If FAIL]: Sprint [N] fails QA on [criteria]. The Generator should address
@@ -281,7 +281,7 @@ the blocking issues and return for re-evaluation. Key issues to resolve:
 
 ## Lesson candidates
 
-[REQUIRED, machine-read by the Retrospector. One item per distinct failure
+[REQUIRED for anti-slop / future learning. One item per distinct failure
 root cause found this round; leave the list empty on a clean PASS. Keep each
 rule generalized — a future project should benefit, not just this one.]
 

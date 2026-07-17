@@ -1,8 +1,8 @@
 {
-  "name": "combined-agent-harness",
+  "name": "tri-agent-harness-opencode",
   "version": "1.0.0",
   "private": true,
-  "description": "Combined harness: three-agent orchestration (Planner/Generator/Evaluator) with professional guardrails (hooks, lints, sandbox, anti-slop).",
+  "description": "OpenCode-only three-agent harness: Planner/Generator/Evaluator with hooks, lints, sandbox, and anti-slop guardrails.",
   "type": "module",
   "scripts": {
     "setup": "bash scripts/install-harness.sh",
@@ -11,16 +11,12 @@
     "lessons:validate": "node scripts/validate-lessons.mjs",
     "lessons:render": "node scripts/render-lessons.mjs",
     "lessons:sync": "node scripts/sync-lessons.mjs",
-    "harness:sdk": "node sdk-orchestrator/cli.mjs",
     "test:harness": "node --test tests/*.test.mjs",
     "test": "node --test tests/*.test.mjs",
     "pre-qa-gate": "bash scripts/pre-qa-gate.sh"
   },
   "devDependencies": {
     "eslint": "^9.0.0"
-  },
-  "dependencies": {
-    "@cursor/sdk": "^1.0.18"
   },
   "engines": {
     "node": ">=20.12.0"

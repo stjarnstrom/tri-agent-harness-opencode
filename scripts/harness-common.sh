@@ -264,12 +264,12 @@ run_pre_qa_gate() {
   bash "$PROJECT_DIR/scripts/pre-qa-gate.sh" "$sprint"
 }
 
-# ─── Helper: validate phase via sdk-orchestrator ─────────────────────
+# ─── Helper: validate phase via harness-lib ───────────────────────────
 validate_phase() {
   local phase="$1"
   local sprint="${2:-1}"
-  if [ -f "$PROJECT_DIR/sdk-orchestrator/cli.mjs" ] && command -v node >/dev/null 2>&1; then
-    node "$PROJECT_DIR/sdk-orchestrator/cli.mjs" validate --phase "$phase" --sprint "$sprint"
+  if [ -f "$PROJECT_DIR/scripts/harness-lib/cli.mjs" ] && command -v node >/dev/null 2>&1; then
+    node "$PROJECT_DIR/scripts/harness-lib/cli.mjs" validate --phase "$phase" --sprint "$sprint"
   fi
 }
 
@@ -282,8 +282,8 @@ write_handoff() {
   shift 4
   local artifacts="$*"
 
-  if [ -f "$PROJECT_DIR/sdk-orchestrator/cli.mjs" ] && command -v node >/dev/null 2>&1; then
-    node "$PROJECT_DIR/sdk-orchestrator/cli.mjs" handoff-write \
+  if [ -f "$PROJECT_DIR/scripts/harness-lib/cli.mjs" ] && command -v node >/dev/null 2>&1; then
+    node "$PROJECT_DIR/scripts/harness-lib/cli.mjs" handoff-write \
       --phase "$phase" \
       --sprint "$sprint" \
       --qa-round "$qa_round" \
@@ -316,14 +316,14 @@ mark_sprint_skipped() {
   local sprint="$1"
   local notes="${2:-Max QA rounds reached; advanced with known issues}"
 
-  if [ -f "$PROJECT_DIR/sdk-orchestrator/cli.mjs" ] && command -v node >/dev/null 2>&1; then
-    node "$PROJECT_DIR/sdk-orchestrator/cli.mjs" sprint-mark-skipped \
+  if [ -f "$PROJECT_DIR/scripts/harness-lib/cli.mjs" ] && command -v node >/dev/null 2>&1; then
+    node "$PROJECT_DIR/scripts/harness-lib/cli.mjs" sprint-mark-skipped \
       --sprint "$sprint" \
       --notes "$notes"
     return 0
   fi
 
-  echo "ERROR: Node.js is required to mark sprint $sprint as Skipped (sdk-orchestrator/cli.mjs)."
+  echo "ERROR: Node.js is required to mark sprint $sprint as Skipped (scripts/harness-lib/cli.mjs)."
   return 1
 }
 
@@ -332,7 +332,7 @@ mark_sprint_skipped() {
 # processes alive. Poll for canonical phase outputs and stop the agent
 # process group when they are stable.
 #
-# HARNESS_AGENT_WATCHDOG=0     disable (wait for cursor agent to exit on its own)
+# HARNESS_AGENT_WATCHDOG=0     disable (wait for opencode to exit on its own)
 # HARNESS_AGENT_POLL_SEC=15    seconds between artifact checks
 # HARNESS_AGENT_STABLE_POLLS=2 consecutive ready polls before stopping agent
 # HARNESS_PHASE_TIMEOUT=7200   wall-clock seconds per agent run (0 = no limit)
@@ -538,23 +538,6 @@ run_agent_with_watchdog() {
   return "$exit_code"
 }
 
-run_cursor_agent() {
-  local phase="${1:?phase required (planner|generator|evaluator)}"
-  local sprint="${2:?sprint required}"
-  local phase_prompt="${3:?prompt required}"
-
-  local cursor_args=(
-    agent -p --force --approve-mcps
-    --workspace "$PROJECT_DIR"
-  )
-  if [ -n "${HARNESS_MODEL:-}" ]; then
-    cursor_args+=(--model "$HARNESS_MODEL")
-  fi
-  cursor_args+=("$phase_prompt")
-
-  run_agent_with_watchdog "$phase" "$sprint" cursor "${cursor_args[@]}"
-}
-
 run_opencode_agent() {
   local phase="${1:?phase required (planner|generator|evaluator)}"
   local sprint="${2:?sprint required}"
@@ -693,12 +676,12 @@ Read design/selected-direction.md and docs/design-options.md.
 Merge the chosen direction (plus any user tweaks) into the final product spec.
 Treat the selection as binding — do not substitute a different aesthetic.
 
-Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update CLAUDE.md.
+Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update AGENTS.md.
 EOF
       ;;
     full|*)
       cat <<'EOF'
-FULL PLAN MODE: Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update CLAUDE.md.
+FULL PLAN MODE: Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update AGENTS.md.
 If a user design brief or reference assets were provided, follow them exactly — expand only where the user was silent.
 EOF
       ;;
@@ -842,9 +825,8 @@ HARNESS_AUTONOMOUS_SUFFIX="
 AUTONOMOUS MODE: Do not ask for confirmation or pause for human review. After writing the sprint contract, implement it immediately in the same session. Complete all required artifacts and status updates before finishing."
 
 # ─── Centralized phase prompts ────────────────────────────────────────
-# Single source of truth for the Generator/Evaluator prompts. All runners
-# (claude / cursor / opencode) get identical prompts, including the lessons
-# ledger context and the autonomous-mode suffix.
+# Single source of truth for Generator/Evaluator prompts used by
+# opencode-harness.sh (includes lessons ledger context and autonomous suffix).
 
 harness_build_generator_prompt() {
   local sprint="${1:?sprint required}"
@@ -872,7 +854,7 @@ Read docs/spec.md for the full spec.
 Read docs/sprint-plan.md for the sprint breakdown.
 Read docs/sprint-status.md to find the current sprint.
 Read all criteria files in agents/criteria/.
-Read CLAUDE.md for the design language and stack.
+Read AGENTS.md for the design language and stack.
 Check git log for what's already built.
 $qa_context
 $mech_context
@@ -942,9 +924,7 @@ harness_preflight() {
       echo "ERROR: required tool(s) not on PATH: ${missing[*]}"
       for cli in "${missing[@]}"; do
         case "$cli" in
-          claude)   echo "  claude   → npm install -g @anthropic-ai/claude-code, then run 'claude' once to log in" ;;
           node)     echo "  node     → install Node.js 20+ (validation, handoffs, and state helpers all need it)" ;;
-          cursor)   echo "  cursor   → install the Cursor CLI (https://cursor.com)" ;;
           opencode) echo "  opencode → install the OpenCode CLI (https://opencode.ai)" ;;
         esac
       done
@@ -960,40 +940,12 @@ harness_preflight() {
   return 0
 }
 
-# Verify each model actually responds before burning a full planning run on a
-# model this account can't use (one tiny prompt per unique model).
-# Skip with HARNESS_PREFLIGHT=off.
-harness_preflight_model_ping() {
-  if [ "${HARNESS_PREFLIGHT:-on}" = "off" ]; then
-    return 0
-  fi
-  local seen=" " m
-  for m in "$@"; do
-    case "$seen" in
-      *" $m "*) continue ;;
-    esac
-    seen="$seen$m "
-    echo "▶ Preflight: checking model $m..."
-    if ! claude --dangerously-skip-permissions --model "$m" -p "Reply with the single word: ok" >/dev/null 2>&1; then
-      {
-        echo "ERROR: model '$m' did not respond — it may be unavailable to this account, or claude is not logged in."
-        echo "  See the real error with: claude --model $m -p 'hi'"
-        echo "  Override models via HARNESS_PLANNER_MODEL / HARNESS_GENERATOR_MODEL / HARNESS_EVALUATOR_MODEL,"
-        echo "  or HARNESS_MODEL for all phases (claude-opus-4-8 is the suggested fallback)."
-        echo "  Skip this check with HARNESS_PREFLIGHT=off."
-      } >&2
-      return 1
-    fi
-  done
-  return 0
-}
-
-# Post-QA handoff manifest (all runners).
+# Post-QA handoff manifest.
 harness_post_qa_write() {
   local sprint="$1"
   local qa_round="$2"
-  if [ -f "$PROJECT_DIR/sdk-orchestrator/cli.mjs" ] && command -v node >/dev/null 2>&1; then
-    node "$PROJECT_DIR/sdk-orchestrator/cli.mjs" post-qa-write \
+  if [ -f "$PROJECT_DIR/scripts/harness-lib/cli.mjs" ] && command -v node >/dev/null 2>&1; then
+    node "$PROJECT_DIR/scripts/harness-lib/cli.mjs" post-qa-write \
       --sprint "$sprint" \
       --qa-round "$qa_round" \
       --source "${HARNESS_SOURCE:-opencode-harness.sh}"
@@ -1049,7 +1001,7 @@ harness_run_planning_phase() {
       fi
 
       write_handoff planner 1 1 run-generator \
-        "docs/spec.md,docs/sprint-plan.md,docs/sprint-status.md,CLAUDE.md"
+        "docs/spec.md,docs/sprint-plan.md,docs/sprint-status.md,AGENTS.md"
 
       echo ""
       echo "✓ Spec written to docs/spec.md"

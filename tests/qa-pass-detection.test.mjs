@@ -46,7 +46,7 @@ async function bashSprintPassed(cwd) {
 }
 
 async function mjsSprintPassed(cwd) {
-  const { sprintPassed } = await import("../sdk-orchestrator/validate.mjs");
+  const { sprintPassed } = await import("../scripts/harness-lib/validate.mjs");
   const prev = process.cwd();
   process.chdir(cwd);
   try {

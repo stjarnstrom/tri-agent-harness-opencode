@@ -66,7 +66,7 @@ Does it need judgment but follow a checklist?
   NO  ↓
 
 Is it domain-specific (billing rules, auth flows)?
-  YES → add to packages/<domain>/CLAUDE.md
+  YES → add to packages/<domain>/AGENTS.md
   NO  ↓
 
 Is it about repo layout or package boundaries?
@@ -177,7 +177,7 @@ This is cultural, not optional. The script only helps if people log issues durin
 When opening a PR that adds or changes guardrails:
 
 - [ ] **Why** — link to or quote the recurring mistake this prevents (GC log entry, PR comment, or session note)
-- [ ] **Layer** — lint / persona / CLAUDE.md / structure — and why that layer fits
+- [ ] **Layer** — lint / persona / AGENTS.md / structure — and why that layer fits
 - [ ] **Message quality** — lint errors read like instructions, not diagnostics
 - [ ] **Severity** — new rules start as `warn`; promote to `error` after one sprint if stable
 - [ ] **Self-check** — `bun lint:harness` passes; `bun run setup` still works

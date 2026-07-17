@@ -28,7 +28,7 @@ Before writing any code, define exactly what "done" means for this sprint.
 - Out of scope for this sprint
 - Test setup notes (seed data, env vars, running services)
 
-**Interactive mode** (Cursor chat, slash commands, handoff scripts without
+**Interactive mode** (manual OpenCode sessions without
 `AUTONOMOUS MODE` in the prompt): After writing the contract, pause and tell
 the user: "Contract written. Review `docs/sprint-[N]-contract.md` before I build,
 or say 'proceed' to continue." Wait for approval before implementing.

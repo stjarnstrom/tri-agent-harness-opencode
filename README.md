@@ -4,7 +4,7 @@ Orchestration and guardrails in one harness: **Planner → Generator → Pre-QA 
 
 This repo is an **OpenCode-only harness scaffold**, not a finished application. You provide a product prompt; the harness creates `docs/` planning artifacts and application code under `app/` sprint by sprint.
 
-> **This repo does not include the Retrospector / end-of-run learning loop.** For that (and Claude Code interactive slash commands), use the fuller-featured [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness). For Cursor, see [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor).
+Sibling tools (separate repos): [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness) (Claude Code), [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor) (Cursor CLI).
 
 ## Architecture
 
@@ -113,13 +113,13 @@ HARNESS_PHASE_TIMEOUT=7200
 | OpenCode config | [`opencode.jsonc`](opencode.jsonc), [`.opencode/agents/`](.opencode/agents/) |
 | Extend lints and guardrails | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
-## Other harness variants
+## Sibling harnesses
 
-| Repo | Runner | Notes |
-|------|--------|-------|
-| [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness) | Claude Code (`./harness.sh`) | Full-featured: Retrospector, learning loop, slash commands |
-| [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor) | Cursor (`./cursor-harness.sh`) | Cursor-only, no Retrospector |
-| **this repo** | OpenCode (`./opencode-harness.sh`) | OpenCode-only |
+| Repo | Runner |
+|------|--------|
+| [tri-agent-harness](https://github.com/stjarnstrom/tri-agent-harness) | Claude Code |
+| [tri-agent-harness-cursor](https://github.com/stjarnstrom/tri-agent-harness-cursor) | Cursor CLI |
+| **this repo** | OpenCode (`./opencode-harness.sh`) |
 
 ## Key files
 
@@ -129,9 +129,10 @@ HARNESS_PHASE_TIMEOUT=7200
 | `opencode.jsonc` | OpenCode permissions and context hygiene |
 | `.opencode/agents/` | OpenCode agent definitions (planner, generator, evaluator) |
 | `scripts/pre-qa-gate.sh` | Mechanical gate between Generator and Evaluator |
+| `scripts/harness-lib/` | Validation and handoff helpers |
 | `app/` | Product root (Generator scaffolds here) |
-| `sdk-orchestrator/` | Validation/handoff helpers |
 | `harness/AGENT-INSTRUCTIONS.md` | Universal agent rules |
+| `AGENTS.md` | Project context (stack, design, status) |
 | `agents/*.md` | Planner, Generator, Evaluator personas |
 
 ## Environment variables
@@ -153,6 +154,6 @@ HARNESS_PHASE_TIMEOUT=7200
 ```bash
 bun lint:harness          # ESLint rules with agent-prompt error messages
 bun gc:weekly             # Review recurring failures → new rules
-bun run setup             # Install pre-commit hook + .cursorignore
+bun run setup             # Install pre-commit hook
 npm run test:harness      # Harness unit tests
 ```

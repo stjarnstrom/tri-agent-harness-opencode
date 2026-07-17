@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  buildPlannerModeInstructions,
   collectDesignBriefContext,
   getPlannerMode,
   getPlanningState,
@@ -11,10 +12,8 @@ import {
   isDesignScoutComplete,
   isPlanningComplete,
   needsPlanning,
-} from "../sdk-orchestrator/design-brief.mjs";
-import { buildPlannerPrompt } from "../sdk-orchestrator/prompts.mjs";
-import { getNextDecision } from "../sdk-orchestrator/orchestrator.mjs";
-import { assertPhaseOutputs } from "../sdk-orchestrator/validate.mjs";
+} from "../scripts/harness-lib/design-brief.mjs";
+import { assertPhaseOutputs } from "../scripts/harness-lib/validate.mjs";
 
 async function withTempDir(run) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "design-brief-"));
@@ -96,56 +95,12 @@ test("collectDesignBriefContext includes brief text and reference paths", async 
   });
 });
 
-test("buildPlannerPrompt injects brief and scout mode instructions", async () => {
-  await withTempDir(async (cwd) => {
-    await mkdir(path.join(cwd, "agents"), { recursive: true });
-    await mkdir(path.join(cwd, "design"), { recursive: true });
-    await writeFile(path.join(cwd, "agents", "planner.md"), "# Planner\n");
-    await writeFile(path.join(cwd, "design", "brief.md"), "Neon terminal green\n");
-
-    const originalCwd = process.cwd();
-    process.chdir(cwd);
-    try {
-      const prompt = await buildPlannerPrompt({ productPrompt: "Build a DAW" });
-      assert.match(prompt, /Neon terminal green/);
-      assert.match(prompt, /FULL PLAN MODE/);
-    } finally {
-      process.chdir(originalCwd);
-    }
-  });
-});
-
-test("buildPlannerPrompt uses scout instructions when no brief", async () => {
-  await withTempDir(async (cwd) => {
-    await mkdir(path.join(cwd, "agents"), { recursive: true });
-    await writeFile(path.join(cwd, "agents", "planner.md"), "# Planner\n");
-
-    const originalCwd = process.cwd();
-    process.chdir(cwd);
-    try {
-      const prompt = await buildPlannerPrompt({ productPrompt: "Build a DAW" });
-      assert.match(prompt, /DESIGN SCOUT MODE/);
-      assert.match(prompt, /docs\/design-options\.md/);
-    } finally {
-      process.chdir(originalCwd);
-    }
-  });
-});
-
-test("getNextDecision returns await-design-selection after scout", async () => {
-  await withTempDir(async (cwd) => {
-    await mkdir(path.join(cwd, "docs"), { recursive: true });
-    await writeFile(path.join(cwd, "docs", "design-options.md"), "# Options\n");
-
-    const originalCwd = process.cwd();
-    process.chdir(cwd);
-    try {
-      const decision = await getNextDecision();
-      assert.equal(decision.action, "await-design-selection");
-    } finally {
-      process.chdir(originalCwd);
-    }
-  });
+test("buildPlannerModeInstructions covers scout and full modes", () => {
+  assert.match(buildPlannerModeInstructions("scout"), /DESIGN SCOUT MODE/);
+  assert.match(buildPlannerModeInstructions("scout"), /docs\/design-options\.md/);
+  assert.match(buildPlannerModeInstructions("full"), /FULL PLAN MODE/);
+  assert.match(buildPlannerModeInstructions("full"), /AGENTS\.md/);
+  assert.match(buildPlannerModeInstructions("finalize"), /DESIGN FINALIZE MODE/);
 });
 
 test("assertPhaseOutputs accepts design scout planner output", async () => {

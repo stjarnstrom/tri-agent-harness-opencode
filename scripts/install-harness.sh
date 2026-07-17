@@ -27,18 +27,6 @@ for hook in pre-commit post-merge; do
   echo "Installed $hook → $dest"
 done
 
-# Install .cursorignore if the project doesn't have one yet
-CURSORIGNORE_SRC="$ROOT/harness/templates/cursorignore"
-CURSORIGNORE_DEST="$ROOT/.cursorignore"
-if [[ -f "$CURSORIGNORE_SRC" ]]; then
-  if [[ -f "$CURSORIGNORE_DEST" ]]; then
-    echo "Keeping existing .cursorignore"
-  else
-    cp "$CURSORIGNORE_SRC" "$CURSORIGNORE_DEST"
-    echo "Installed .cursorignore (secrets excluded from AI indexing)"
-  fi
-fi
-
 echo ""
 echo "Installing dependencies..."
 cd "$ROOT"
@@ -49,7 +37,7 @@ else
 fi
 
 echo ""
-echo "Combined harness installed. Next steps:"
+echo "OpenCode harness installed. Next steps:"
 echo "  1. Run 'bun lint:harness' to verify lint rules work"
 echo "  2. Copy .env.example → .env.local and fill in real values (never commit .env.local)"
 echo "  3. Optional: brew install gitleaks — enables full secret scan in pre-commit"

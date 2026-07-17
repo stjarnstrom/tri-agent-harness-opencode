@@ -326,7 +326,7 @@
     </div>
     <div class="wrap-wide">
       <div class="plate">
-        <svg viewBox="0 0 960 250" role="img" aria-label="Diagram: Planner feeds Generator, then Pre-QA Gate, then Evaluator. A fail wire returns to the Generator. After the run, the Retrospector writes lessons that feed the next run.">
+        <svg viewBox="0 0 960 250" role="img" aria-label="Diagram: Planner feeds Generator, then Pre-QA Gate, then Evaluator. A fail wire returns to the Generator. QA failures feed the anti-slop loop for the next run.">
           <defs>
             <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
               <path d="M0,0 L8,4 L0,8 z" fill="#10202e"/>
@@ -354,7 +354,7 @@
             <text x="680" y="83" text-anchor="middle" fill="#f1f3f5">Evaluator</text>
 
             <rect x="800" y="55" width="140" height="46" rx="8" fill="#f1f3f5" stroke="#d14d21" stroke-width="1.5"/>
-            <text x="870" y="83" text-anchor="middle" fill="#d14d21">Retrospector</text>
+            <text x="870" y="83" text-anchor="middle" fill="#d14d21">Anti-slop</text>
           </g>
 
           <!-- forward wires -->
@@ -432,11 +432,10 @@
           instruction: “it mostly works” is a fail.</p>
         </div>
         <div class="card learn-card">
-          <h3>Retrospector</h3>
-          <span class="tech">not included</span>
-          <p>This OpenCode repo does not run the Retrospector. For end-of-run
-          learning (lessons ledger, guardrail proposals), use the
-          <a href="https://github.com/stjarnstrom/tri-agent-harness">Claude Code harness</a>.</p>
+          <h3>Anti-slop</h3>
+          <span class="tech">bun gc:weekly</span>
+          <p>QA failures land in <code>.gc-cache/</code>. Review recurring patterns
+          weekly and promote them into lint rules or guardrails.</p>
         </div>
       </div>
     </div>
@@ -469,7 +468,7 @@
 <span class="k">cp</span> .env.example .env.local</pre>
             </div>
             <p>
-              For the Retrospector and cross-run learning loop, use the
+              For a fuller learning loop (Retrospector), see sibling
               <a href="https://github.com/stjarnstrom/tri-agent-harness">Claude Code harness</a>.
             </p>
           </div>
@@ -579,7 +578,7 @@
           <span class="tplus">5–15 min</span>
           <h3>Planning</h3>
           <p>The Planner writes the spec, sprint plan, and status tracker, and
-          fills CLAUDE.md with the design language.</p>
+          fills AGENTS.md with the design language.</p>
           <span class="wire">docs/spec.md · docs/sprint-plan.md · docs/sprint-status.md</span>
         </div>
         <div class="event">
@@ -670,8 +669,8 @@
             <tr><td><code>docs/sprint-N-contract.md</code></td><td class="who">Generator</td><td>Sprint scope, acceptance criteria, self-eval</td></tr>
             <tr><td><code>docs/mechanical-checks-sprint-N.md</code></td><td class="who">Pre-QA gate</td><td>Lint/artifact results; FAIL blocks evaluation</td></tr>
             <tr><td><code>docs/qa-report-sprint-N.md</code></td><td class="who">Evaluator</td><td>Verdict, scores, bugs — ends with lesson candidates</td></tr>
-            <tr><td><code>harness/LESSONS.md</code></td><td class="who learn-w">Retrospector</td><td>Distilled cross-run lessons (max 25, phase-grouped)</td></tr>
-            <tr><td><code>docs/proposals/guardrail-*.md</code></td><td class="who learn-w">Retrospector</td><td>Draft guardrails awaiting your review</td></tr>
+            <tr><td><code>harness/LESSONS.md</code></td><td class="who learn-w">Anti-slop</td><td>Distilled cross-run lessons (max 25, phase-grouped)</td></tr>
+            <tr><td><code>docs/proposals/guardrail-*.md</code></td><td class="who learn-w">Anti-slop</td><td>Draft guardrails awaiting your review</td></tr>
           </tbody>
         </table>
       </div>
@@ -689,7 +688,7 @@
       <h2>How the harness learns</h2>
       <p class="lead-in">
         This OpenCode repo logs QA failures for the anti-slop loop
-        (<code>bun gc:weekly</code>) but does not run the Retrospector.
+        (<code>bun gc:weekly</code>).
         For the full learning loop, use
         <a href="https://github.com/stjarnstrom/tri-agent-harness">tri-agent-harness</a>.
       </p>
@@ -734,7 +733,7 @@
     </div>
     <div class="wrap">
       <div class="console">
-<pre><span class="c"># anti-slop toolbox (no Retrospector in this repo)</span>
+<pre><span class="c"># anti-slop toolbox</span>
 <span class="k">bun gc:weekly</span>     <span class="c"># review recurring failures → guardrail proposals</span></pre>
       </div>
       <p>

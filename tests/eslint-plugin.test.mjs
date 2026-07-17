@@ -141,7 +141,7 @@ ruleTester.run("component-too-large", plugin.rules["component-too-large"], {
     // Plain JS with `i<len` is not JSX — must not get "extract child components" advice.
     {
       code: bigPlainCli,
-      filename: "sdk-orchestrator/cli.mjs",
+      filename: "scripts/harness-lib/cli.mjs",
       options: [{ maxLines: 50 }],
     },
     // Test files are exempt, like file-too-large.

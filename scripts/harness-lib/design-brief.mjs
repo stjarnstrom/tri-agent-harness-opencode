@@ -144,12 +144,12 @@ Read design/selected-direction.md and docs/design-options.md.
 Merge the chosen direction (plus any user tweaks) into the final product spec.
 Treat the selection as binding — do not substitute a different aesthetic.
 
-Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update CLAUDE.md.`;
+Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update AGENTS.md.`;
 
     case "full":
     default:
       return `
-FULL PLAN MODE: Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update CLAUDE.md.
+FULL PLAN MODE: Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update AGENTS.md.
 If a user design brief or reference assets were provided, follow them exactly — expand only where the user was silent.`;
   }
 }

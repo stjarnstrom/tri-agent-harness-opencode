@@ -41,7 +41,7 @@ figure those out. Wrong implementation details in the spec cascade into bugs.
 
 Do specify:
 
-- Stack (based on the defaults in CLAUDE.md, adapted if needed)
+- Stack (based on the defaults in AGENTS.md, adapted if needed)
 - Data model at the entity level (User, Project, Session — not table schemas)
 - Key API surface if full-stack (what the frontend needs from the backend)
 - AI feature design (what Claude does, when it's invoked, what it returns)
@@ -59,7 +59,7 @@ Before committing to a design direction, check for user-provided input:
 
 | Condition | Mode | Output |
 |-----------|------|--------|
-| User brief or references present | Full plan | `docs/spec.md`, sprint plan, status, `CLAUDE.md` |
+| User brief or references present | Full plan | `docs/spec.md`, sprint plan, status, `AGENTS.md` |
 | `design/selected-direction.md` + `docs/design-options.md` | Finalize | Full planning artifacts using the selected direction |
 | No design input | Design scout | **Only** `docs/design-options.md` (3 options) — stop |
 
@@ -151,7 +151,7 @@ Write the following files:
 | 2      | ...   | Not started | — | — |
 ```
 
-**Update `CLAUDE.md`** in the project root with:
+**Update `AGENTS.md`** in the project root with:
 
 - Product name and one-line description
 - Confirmed stack
@@ -179,5 +179,5 @@ Be ambitious. Be specific. Avoid vague language like "the user can manage their
 settings" — say what settings, and why they matter. The spec should make
 someone excited to build this thing.
 
-When you're done, summarize what you've planned in 3–5 sentences and tell the
-user to run `/project:build` to start Sprint 1.
+When you're done, summarize what you've planned in 3–5 sentences. Sprint 1 starts
+when the user runs `./opencode-harness.sh` (or continues an existing run).

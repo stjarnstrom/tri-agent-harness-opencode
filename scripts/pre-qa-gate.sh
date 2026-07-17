@@ -75,7 +75,7 @@ is_harness_test_script() {
   node -e "
     const pkg = require('./${APP_DIR}/package.json');
     const script = pkg.scripts?.['${script_name}'] || '';
-    const harnessPattern = /test:harness|tests\/\*\.test\.mjs|sdk-orchestrator/;
+    const harnessPattern = /test:harness|tests\/\*\.test\.mjs|harness-lib/;
     process.exit(harnessPattern.test(script) ? 0 : 1);
   " 2>/dev/null
 }
@@ -154,10 +154,10 @@ check_app_build_and_tests() {
   fi
 }
 
-# ── 1. Artifact validation via sdk-orchestrator ──────────────────────────────
-if [ -f "sdk-orchestrator/cli.mjs" ] && command -v node >/dev/null 2>&1; then
+# ── 1. Artifact validation via harness-lib ───────────────────────────────────
+if [ -f "scripts/harness-lib/cli.mjs" ] && command -v node >/dev/null 2>&1; then
   echo "Checking phase artifacts..."
-  if ! node sdk-orchestrator/cli.mjs validate --phase generator --sprint "$SPRINT" 2>&1; then
+  if ! node scripts/harness-lib/cli.mjs validate --phase generator --sprint "$SPRINT" 2>&1; then
     FAILURES+=("Artifact validation failed (missing contract or sprint status not 'Ready for QA')")
   fi
 else

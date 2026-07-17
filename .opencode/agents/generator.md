@@ -10,7 +10,7 @@ Before acting, read and follow:
 - `app/README.md` (product root — scaffold only under `app/`)
 - `harness/AGENT-INSTRUCTIONS.md` (sandbox, lints, commit rules)
 - `docs/spec.md`, `docs/sprint-plan.md`, `docs/sprint-status.md`
-- `CLAUDE.md` (design language and stack)
+- `AGENTS.md` (design language and stack)
 - `agents/criteria/*.md`
 
 Run `bun lint:harness` before marking Ready for QA. Commit via the pre-commit hook.

@@ -3,7 +3,7 @@
 This is a reference directory structure designed so agents can scope their vision to specific subtrees without reading the whole codebase. Each domain package has:
 
 1. **A clear public API** (only `src/index.ts` is "exported" to other packages)
-2. **Co-located instructions** (`CLAUDE.md`) describing what rules apply here — the canonical domain filename for all tools (Claude Code loads these automatically; others read them per [`AGENT-INSTRUCTIONS.md`](AGENT-INSTRUCTIONS.md))
+2. **Co-located instructions** (`AGENTS.md`) describing what rules apply here — read per [`AGENT-INSTRUCTIONS.md`](AGENT-INSTRUCTIONS.md)
 3. **TypeScript project references** enforcing boundary checks via `tsc --build` and our lint rule
 
 ## Layout
@@ -11,7 +11,7 @@ This is a reference directory structure designed so agents can scope their visio
 ```
 packages/
 ├── auth/                    # Authentication domain
-│   ├── CLAUDE.md            # Domain-specific agent instructions (canonical filename)
+│   ├── AGENTS.md            # Domain-specific agent instructions (canonical filename)
 │   ├── package.json         # Public API: { "main": "./dist/index.js", "types": "./dist/index.d.ts" }
 │   ├── tsconfig.json        # Project reference target
 │   └── src/
@@ -22,7 +22,7 @@ packages/
 │       └── internal/        # Private helpers — NOT exported from index.ts
 │           └── jwt.ts
 ├── billing/                 # Billing domain
-│   ├── CLAUDE.md
+│   ├── AGENTS.md
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── src/
@@ -31,7 +31,7 @@ packages/
 │       ├── subscription.ts
 │       └── internal/        # Private — billing-specific utilities
 ├── ui-system/               # Shared UI components (cross-domain)
-│   ├── CLAUDE.md
+│   ├── AGENTS.md
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── src/
@@ -40,14 +40,14 @@ packages/
 │       ├── card.tsx
 │       └── themes/          # Theme tokens — consumed by other packages
 ├── shared-types/            # Cross-cutting types (no logic)
-│   ├── CLAUDE.md
+│   ├── AGENTS.md
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── src/
 │       ├── index.ts         # User, Order, Permission interfaces
 │       └── enums.ts
 └── utils/                   # Shared utilities (pure functions only)
-    ├── CLAUDE.md
+    ├── AGENTS.md
     ├── package.json
     ├── tsconfig.json
     └── src/
@@ -101,7 +101,7 @@ Real credentials never belong in source or git history. The harness pattern:
 | File | Committed? | Agent reads? |
 |------|------------|--------------|
 | `.env.example` | Yes | Yes — names and dummy values only |
-| `.env.local`, `.env` | No (gitignored) | No — blocked by `.cursorignore` and opencode |
+| `.env.local`, `.env` | No (gitignored) | No — blocked by OpenCode `permission.read` denies |
 | Source code | Yes | Yes — use `process.env.VAR`, never literals |
 
 Pre-commit rejects staged `.env` files and runs gitleaks (or a regex fallback). See [`AGENT-INSTRUCTIONS.md`](AGENT-INSTRUCTIONS.md) for agent-facing rules.
@@ -110,23 +110,23 @@ Pre-commit rejects staged `.env` files and runs gitleaks (or a regex fallback). 
 
 1. Copy the template structure above (minus git history).
 2. Create `src/index.ts` with your public re-exports.
-3. Add a `CLAUDE.md` describing what this package does and any domain-specific rules for agents working in it. **Use exactly `CLAUDE.md`** — one canonical filename for all tools (Claude Code auto-loads it; Cursor and opencode follow the rule in [`AGENT-INSTRUCTIONS.md`](AGENT-INSTRUCTIONS.md)).
+3. Add an `AGENTS.md` describing what this package does and any domain-specific rules for agents working in it.
 4. Register in root `tsconfig.json` under `"references"`.
 5. Update each consumer's tsconfig to add a reference to the new package.
 
-## How Subdirectory CLAUDE.md Files Work
+## How Subdirectory AGENTS.md Files Work
 
-Each domain package gets one `CLAUDE.md` — no per-tool duplicates. When working on code in `packages/billing/`, agents should apply:
-1. Root `CLAUDE.md` (project-wide rules)
-2. `packages/billing/CLAUDE.md` (domain-specific rules)
+Each domain package gets one `AGENTS.md`. When working on code in `packages/billing/`, agents should apply:
+1. Root `AGENTS.md` (project-wide rules)
+2. `packages/billing/AGENTS.md` (domain-specific rules)
 
-Claude Code loads both automatically. Cursor, opencode, and other tools must read the package's `CLAUDE.md` explicitly when scoped to that directory (see [`AGENT-INSTRUCTIONS.md`](AGENT-INSTRUCTIONS.md)).
+OpenCode agents must read the package's `AGENTS.md` explicitly when scoped to that directory (see [`AGENT-INSTRUCTIONS.md`](AGENT-INSTRUCTIONS.md)).
 
 The subdirectory file **augments** the root — rules from both files apply. Use this to keep domain-specific guidance close to the code without duplicating project-wide conventions in every package.
 
 ## What NOT to Do
 
-- **Don't duplicate domain instructions per tool.** One `CLAUDE.md` per package — not separate `AGENTS.md` or `.cursorrules` copies. Other tools read the same file explicitly.
+- **Don't duplicate domain instructions.** One `AGENTS.md` per package.
 - **Don't create 750 packages.** Scope by meaningful domain, not by file count. Two packages are fine; fifty is overkill.
 - **Don't use barrel files as implementation.** `index.ts` should only re-export — no business logic in the entry point.
 - **Don't let agents import from `internal/`.** The boundary lint (`one-canonical-pattern`) will catch it if configured. The real enforcement happens at build time via TypeScript project references.
