@@ -1,0 +1,63 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "mcp__playwright__*",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.local)",
+      "Read(.env.*.local)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/credentials.json)",
+      "Read(**/secrets.json)",
+      "Read(**/node_modules/**)",
+      "Read(**/dist/**)",
+      "Read(**/build/**)",
+      "Read(**/.next/**)",
+      "Read(**/out/**)",
+      "Read(**/.turbo/**)",
+      "Read(**/coverage/**)",
+      "Read(**/.nyc_output/**)",
+      "Read(**/playwright-report/**)",
+      "Read(**/test-results/**)",
+      "Read(**/blob-report/**)",
+      "Read(**/__pycache__/**)",
+      "Read(**/.venv/**)",
+      "Read(**/venv/**)",
+      "Read(package-lock.json)",
+      "Read(bun.lock)",
+      "Read(yarn.lock)",
+      "Read(pnpm-lock.yaml)",
+      "Read(**/*.min.js)",
+      "Read(**/*.min.css)",
+      "Read(**/*.map)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "network": {
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "cdn.playwright.dev",
+        "playwright.download.prss.microsoft.com",
+        "api.anthropic.com",
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "objects.githubusercontent.com",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com",
+        "localhost",
+        "127.0.0.1"
+      ],
+      "allowLocalBinding": true
+    }
+  }
+}

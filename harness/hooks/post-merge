@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# post-merge: safety net for agent sessions
+# After a merge, ensure we're on a clean state and warn about uncommitted work.
+# This prevents agents from accidentally working on merged branches with stale state.
+
+set -euo pipefail
+
+if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]]; then
+  exit 0
+fi
+
+BRANCH="$(git branch --show-current)"
+
+if [[ -z "$BRANCH" ]] || [[ "$BRANCH" == "(detached"* ]]; then
+  echo "[harness] Note: you are on a detached HEAD after merge." >&2
+  echo "Consider checking out the target branch explicitly." >&2
+  exit 0
+fi
+
+UNCOMMITTED=$(git status --porcelain)
+if [[ -n "$UNCOMMITTED" ]]; then
+  echo "" >&2
+  echo "[harness] WARNING: Uncommitted changes exist after merge." >&2
+  echo "Agent sessions work best from a clean working tree on $BRANCH." >&2
+  echo "" >&2
+  echo "Suggested next steps:" >&2
+  echo "  1. git stash push -u -m 'agent-session-prep'   # save and clean" >&2
+  echo "  2. git status                                    # verify clean" >&2
+  echo "" >&2
+fi
+
+TRACKING=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null || true)
+if [[ -n "$TRACKING" ]]; then
+  BEHIND=$(git rev-list --count "${TRACKING}..HEAD" 2>/dev/null || echo "0")
+  AHEAD=$(git rev-list --count "HEAD..${TRACKING}" 2>/dev/null || echo "0")
+  if [[ "$AHEAD" -gt 0 ]]; then
+    echo "[harness] INFO: $BRANCH is $AHEAD commit(s) behind $TRACKING." >&2
+    echo "Consider running 'git pull' before starting an agent session." >&2
+  fi
+fi
+
+exit 0

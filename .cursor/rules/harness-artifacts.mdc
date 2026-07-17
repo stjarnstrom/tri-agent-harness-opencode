@@ -1,0 +1,13 @@
+---
+description: Keep docs artifacts and sprint state consistent
+alwaysApply: true
+---
+
+# Harness Artifacts
+
+- `docs/sprint-status.md` is the source of truth for sprint state.
+- Valid sprint status progression: `Not started` -> `In progress` -> `Ready for QA` -> `Pass` or `Fail`.
+- Planner outputs: `docs/spec.md`, `docs/sprint-plan.md`, `docs/sprint-status.md`, and `CLAUDE.md` context updates.
+- Generator outputs: `docs/sprint-N-contract.md` (with self-eval) and status update to `Ready for QA`.
+- Evaluator outputs: `docs/qa-report-sprint-N.md` and status update to `Pass` or `Fail`.
+- Do not skip required artifacts; if missing, create/fix before continuing phase work.

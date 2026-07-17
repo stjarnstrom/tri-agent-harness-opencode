@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# Unified harness pre-commit guard:
+#   1. Filesystem sandbox — reject staged paths outside project root
+#   2. Harness lints — run agent-prompt rules on staged JS/TS files
+#   3. Env file guard — reject staging .env / credential files
+#   4. Secret scan — gitleaks (if installed) or basic regex fallback
+#
+# Install: bun run setup   (or copy to .git/hooks/pre-commit)
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+SANDBOX_BOUNDARY="${HARNESS_SANDBOX:-$ROOT}"
+SANDBOX_ABS="$(cd "$SANDBOX_BOUNDARY" && pwd)"
+
+echo "=== Harness Pre-Commit ==="
+
+# ── 1. Filesystem sandbox ────────────────────────────────────────────────────
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
+
+if [[ -z "$STAGED_FILES" ]]; then
+  echo "No staged files — skipping checks."
+  exit 0
+fi
+
+BLOCKED=()
+while IFS= read -r file; do
+  [[ -z "$file" ]] && continue
+  if [[ "$file" == /* ]]; then
+    FILE_ABS="$file"
+  else
+    FILE_ABS="$ROOT/$file"
+  fi
+  case "$FILE_ABS" in
+    "$SANDBOX_ABS"*) ;;
+    *) BLOCKED+=("$file") ;;
+  esac
+done <<< "$STAGED_FILES"
+
+if [[ ${#BLOCKED[@]} -gt 0 ]]; then
+  echo ""
+  echo "ERROR [harness-sandbox]: Staged files outside sandbox boundary:"
+  for f in "${BLOCKED[@]}"; do
+    echo "  $f"
+  done
+  echo ""
+  echo "Sandbox root: $SANDBOX_ABS"
+  echo "Override with HARNESS_SANDBOX=/wider/path or bypass with: git commit --no-verify"
+  exit 1
+fi
+
+# ── 2. Harness lints on staged JS/TS ─────────────────────────────────────────
+JS_TS_FILES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
+
+if [[ -n "$JS_TS_FILES" ]]; then
+  COUNT=$(echo "$JS_TS_FILES" | wc -l | tr -d ' ')
+  echo "Linting $COUNT staged file(s)..."
+  if ! bun run lint:harness -- $JS_TS_FILES; then
+    echo ""
+    echo "Harness lints failed. Fix the issues above — each message is an instruction."
+    echo "Bypass only if intentional: git commit --no-verify"
+    exit 1
+  fi
+else
+  echo "No JS/TS files staged — skipping lints."
+fi
+
+# ── 2.5 Lessons ledger validation ────────────────────────────────────────────
+if echo "$STAGED_FILES" | grep -qE '^harness/(lessons\.jsonl|LESSONS\.md)$'; then
+  echo "Validating lessons ledger..."
+  if ! node "$ROOT/scripts/validate-lessons.mjs" "$ROOT"; then
+    echo ""
+    echo "Lessons validation failed. Fix harness/lessons.jsonl or run: node scripts/render-lessons.mjs"
+    exit 1
+  fi
+fi
+
+# ── 3. Block staging env / credential files ──────────────────────────────────
+ENV_BLOCKED=()
+while IFS= read -r file; do
+  [[ -z "$file" ]] && continue
+  base=$(basename "$file")
+  case "$base" in
+    .env.example|.env.sample|.env.template) ;;
+    .env) ENV_BLOCKED+=("$file") ;;
+    .env.*) ENV_BLOCKED+=("$file") ;;
+    credentials.json|secrets.json) ENV_BLOCKED+=("$file") ;;
+  esac
+  [[ "$base" == *.pem || "$base" == *.key ]] && ENV_BLOCKED+=("$file")
+done <<< "$STAGED_FILES"
+
+if [[ ${#ENV_BLOCKED[@]} -gt 0 ]]; then
+  echo ""
+  echo "ERROR [harness-secrets]: Staged files that must not be committed:"
+  for f in "${ENV_BLOCKED[@]}"; do
+    echo "  $f"
+  done
+  echo ""
+  echo "Put real values in .env.local (gitignored). Commit names/shapes in .env.example only."
+  exit 1
+fi
+
+# ── 4. Secret scan ───────────────────────────────────────────────────────────
+GITLEAKS_CONFIG="$ROOT/harness/gitleaks.toml"
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "Running gitleaks on staged changes..."
+  if ! gitleaks protect --staged --redact --config "$GITLEAKS_CONFIG" --source "$ROOT"; then
+    echo ""
+    echo "ERROR: gitleaks detected possible secrets in staged changes."
+    echo "Use environment variables or a secrets manager — see .env.example for the pattern."
+    exit 1
+  fi
+elif git diff --cached --diff-filter=ACM -- . ':(exclude)tests/eslint-plugin.test.mjs' | grep -qEi '(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,})'; then
+  echo ""
+  echo "ERROR: Possible secret detected in staged changes."
+  echo "Use an environment variable or secrets manager instead of hardcoding credentials."
+  echo "Install gitleaks for broader coverage: brew install gitleaks"
+  exit 1
+fi
+
+# ── 5. Binary file warning ───────────────────────────────────────────────────
+BINARY=$(echo "$STAGED_FILES" | while read -r f; do
+  [[ -z "$f" ]] && continue
+  file "$ROOT/$f" 2>/dev/null | grep -q 'binary' && echo "$f"
+done || true)
+
+if [[ -n "$BINARY" ]]; then
+  echo ""
+  echo "WARNING: Binary files detected in staged changes:"
+  echo "$BINARY"
+  echo "If intentional, add them to .gitignore and re-add with git add -f."
+fi
+
+echo "Pre-commit passed."

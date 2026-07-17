@@ -1,0 +1,113 @@
+name: harness-guardrails
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main, master]
+
+jobs:
+  lint-harness:
+    name: "Mini-harness lints"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile || bun install
+      - name: Run harness orchestrator tests
+        run: npm run test:harness
+      - name: Run harness lint rules
+        run: npx eslint --config .eslintrc.harness.cjs harness/eslint-plugin-harness/ scripts/
+
+  component-size-check:
+    name: "Component size audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile || bun install
+      - name: Find oversized components
+        id: check
+        run: |
+          THRESHOLD=150
+          VIOLATIONS=$(find harness/eslint-plugin-harness/ scripts/ -name "*.tsx" -o -name "*.jsx" 2>/dev/null | while read f; do
+            LINES=$(wc -l < "$f")
+            if [ "$LINES" -gt "$THRESHOLD" ]; then
+              echo "  $f: ${LINES} lines"
+            fi
+          done)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::notice::Component size warnings:"
+            echo "$VIOLATIONS"
+            echo "violations=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "All components under ${THRESHOLD} lines."
+          fi
+
+  security-scan:
+    name: "Security surface scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile || bun install
+      - name: Scan for leaked secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: harness/gitleaks.toml
+
+  agent-feedback:
+    name: "Agent feedback loop"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile || bun install
+      - name: Run full harness suite
+        id: results
+        run: |
+          set +e
+          npx eslint --config .eslintrc.harness.cjs harness/eslint-plugin-harness/ scripts/ 2>&1 | tee /tmp/harness-results.txt
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+      - name: Post agent-friendly feedback as PR comment
+        if: steps.results.outputs.exit_code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = fs.readFileSync('/tmp/harness-results.txt', 'utf8');
+            
+            const comment = [
+              '## `harness` Agent Feedback',
+              '',
+              'Your last commit triggered harness guardrails. Here\'s what to fix:',
+              '',
+              '```',
+              results.split('\n').slice(0, 50).join('\n'),
+              '```',
+              '',
+              '> **Tip:** Treat these messages as instructions, not just errors.',
+              '> Each harness rule includes the exact import/path/fix in its message.',
+            ].join('\n');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });

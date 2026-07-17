@@ -1,0 +1,50 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "harness/AGENT-INSTRUCTIONS.md",
+    "CLAUDE.md"
+  ],
+  "permission": {
+    "read": {
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "**/credentials.json": "deny",
+      "**/secrets.json": "deny",
+      "**/*.pem": "deny",
+      "**/*.key": "deny",
+      // Junk context — mirrors .claude/settings.json deny rules and .cursorignore
+      "**/node_modules/**": "deny",
+      "**/dist/**": "deny",
+      "**/build/**": "deny",
+      "**/.next/**": "deny",
+      "**/out/**": "deny",
+      "**/.turbo/**": "deny",
+      "**/coverage/**": "deny",
+      "**/.nyc_output/**": "deny",
+      "**/playwright-report/**": "deny",
+      "**/test-results/**": "deny",
+      "**/blob-report/**": "deny",
+      "**/__pycache__/**": "deny",
+      "**/.venv/**": "deny",
+      "**/venv/**": "deny",
+      "**/package-lock.json": "deny",
+      "**/bun.lock": "deny",
+      "**/yarn.lock": "deny",
+      "**/pnpm-lock.yaml": "deny",
+      "**/*.min.js": "deny",
+      "**/*.min.css": "deny",
+      "**/*.map": "deny"
+    },
+    "bash": {
+      "rm -rf /": "deny",
+      "sudo *": "deny"
+    }
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,23 @@
+---
+description: Enforce harness guardrails — sandbox, lints, secrets
+alwaysApply: true
+---
+
+# Harness Guardrails
+
+Every agent session must follow these rules regardless of phase:
+
+1. Read `harness/AGENT-INSTRUCTIONS.md` before making changes.
+2. Never read, write, or commit files outside the project root without permission.
+3. Never hardcode secrets — use `process.env.VAR_NAME` and `.env.example` for shapes.
+4. Run `bun lint:harness` before committing. Lint messages are fix instructions.
+5. Do not stage `.env` files — pre-commit hook blocks them.
+6. Recurring mistakes → log to `.gc-cache/weekly-report.jsonl` and propose a new lint rule.
+
+## Phase-specific rules
+
+- **Planner:** No implementation code. May update `CLAUDE.md` and planning docs only.
+- **Generator:** Must pass pre-commit hook on every commit. Must pass pre-QA gate before Evaluator runs.
+- **Evaluator:** No code fixes. Include mechanical check results from `docs/mechanical-checks-sprint-[N].md` in QA report.
+
+See `docs/runtime-contract.md` for file ownership and phase boundaries.

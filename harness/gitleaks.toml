@@ -1,0 +1,16 @@
+# Secret scan config for pre-commit (gitleaks protect) and CI (gitleaks-action).
+# Install locally: brew install gitleaks  (or see https://github.com/gitleaks/gitleaks)
+
+title = "Harness gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''\.env\.example$''',
+  '''\.env\.sample$''',
+  '''\.env\.template$''',
+  # Test fixtures for the no-leaked-secrets ESLint rule must look like real tokens.
+  '''tests/eslint-plugin\.test\.mjs$''',
+]
