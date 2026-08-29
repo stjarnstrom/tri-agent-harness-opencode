@@ -1,0 +1,52 @@
+name: Deploy field guide
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/guide/**"
+      - ".github/workflows/deploy-guide.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage guide site
+        run: |
+          mkdir -p _site/guide
+          cp -a docs/guide/. _site/guide/
+          touch _site/.nojekyll
+          printf '%s\n' \
+            '<!doctype html>' \
+            '<meta charset="utf-8">' \
+            '<title>Tri-agent harness — field guide</title>' \
+            '<meta http-equiv="refresh" content="0; url=guide/">' \
+            '<link rel="canonical" href="guide/">' \
+            '<p><a href="guide/">Open the field guide</a></p>' \
+            > _site/index.html
+      - uses: actions/configure-pages@v5
+        with:
+          # Best-effort first-run enable. If this still fails with
+          # "Resource not accessible by integration", enable Pages once
+          # manually: Settings → Pages → Source → GitHub Actions, then
+          # re-run this workflow.
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

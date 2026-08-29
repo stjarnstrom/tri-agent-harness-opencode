@@ -9,10 +9,9 @@ PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 HARNESS_ON_MAX_ROUNDS="${HARNESS_ON_MAX_ROUNDS:-halt}"
 
 # Pause controls (token/cost management)
-# HARNESS_PAUSE: off (default) | sprint | phase | design
+# HARNESS_PAUSE: off (default) | sprint | phase
 #   sprint — confirm before each new sprint (qa round 1 only)
 #   phase  — confirm before every Planner/Generator/Evaluator invocation
-#   design — confirm after design-scout (when docs/design-options.md exists, no sprint-status)
 # HARNESS_YES=1 — skip all pause prompts (fully autonomous)
 # HARNESS_MAX_SPRINTS_PER_RUN=N — stop after N sprints in this invocation (resume later)
 # HARNESS_USAGE_CHECK=1 — run scripts/usage-check.sh at sprint boundaries
@@ -39,11 +38,7 @@ harness_should_pause_sprint() {
 }
 
 harness_should_pause_phase() {
-  [[ "$HARNESS_PAUSE" == "phase" || "$HARNESS_PAUSE" == "design" ]]
-}
-
-harness_should_pause_design() {
-  [[ "$HARNESS_PAUSE" == "design" ]]
+  [[ "$HARNESS_PAUSE" == "phase" ]]
 }
 
 harness_prompt_continue() {
@@ -356,9 +351,6 @@ harness_phase_artifacts_ready() {
 
   case "$phase" in
     planner)
-      if [[ -f docs/design-options.md && ! -f docs/sprint-status.md ]]; then
-        return 0
-      fi
       [[ -f docs/spec.md && -f docs/sprint-plan.md && -f docs/sprint-status.md ]]
       ;;
     generator)
@@ -619,73 +611,11 @@ harness_has_design_brief_input() {
   return 1
 }
 
-harness_has_selected_direction() {
-  harness_design_file_has_content "design/selected-direction.md"
-}
-
-harness_is_design_scout_complete() {
-  [[ -f docs/design-options.md ]] && [[ ! -f docs/sprint-status.md ]]
-}
-
-harness_is_planning_complete() {
-  [[ -f docs/spec.md ]] && [[ -f docs/sprint-status.md ]]
-}
-
-harness_get_planner_mode() {
-  if harness_is_planning_complete; then
-    echo "complete"
-    return
-  fi
-  if harness_has_design_brief_input; then
-    echo "full"
-    return
-  fi
-  if harness_has_selected_direction && [[ -f docs/design-options.md ]]; then
-    echo "finalize"
-    return
-  fi
-  if [ "$HARNESS_YES" = "1" ]; then
-    echo "full"
-    return
-  fi
-  echo "scout"
-}
-
 harness_planner_mode_instructions() {
-  local mode="$1"
-  case "$mode" in
-    scout)
-      cat <<'EOF'
-DESIGN SCOUT MODE: No user design brief was provided.
-
-Write ONLY docs/design-options.md using the shape in docs/templates/design-options.md.
-Include exactly 3 materially different design directions (Option A, B, C). Each must have
-aesthetic, palette, typography, motion, signature element, and rationale.
-
-Do NOT write docs/sprint-plan.md or docs/sprint-status.md.
-Do NOT write a full docs/spec.md — at most a one-paragraph product stub if needed for context.
-
-Stop after docs/design-options.md is complete. The harness will pause for the user to pick a direction.
-EOF
-      ;;
-    finalize)
-      cat <<'EOF'
-DESIGN FINALIZE MODE: The user selected a design direction.
-
-Read design/selected-direction.md and docs/design-options.md.
-Merge the chosen direction (plus any user tweaks) into the final product spec.
-Treat the selection as binding — do not substitute a different aesthetic.
-
-Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update AGENTS.md.
-EOF
-      ;;
-    full|*)
-      cat <<'EOF'
+  cat <<'EOF'
 FULL PLAN MODE: Write docs/spec.md, docs/sprint-plan.md, docs/sprint-status.md, and update AGENTS.md.
 If a user design brief or reference assets were provided, follow them exactly — expand only where the user was silent.
 EOF
-      ;;
-  esac
 }
 
 collect_design_brief_context() {
@@ -715,15 +645,6 @@ ${content}
     fi
   done
 
-  if harness_design_file_has_content "design/selected-direction.md"; then
-    content="$(cat design/selected-direction.md)"
-    sections="${sections}### design/selected-direction.md
-
-${content}
-
-"
-  fi
-
   if [ -d design/references ]; then
     local refs=""
     for asset in design/references/*; do
@@ -752,15 +673,15 @@ ${refs}
 ${sections}"
 }
 
+harness_is_planning_complete() {
+  [[ -f docs/spec.md ]] && [[ -f docs/sprint-status.md ]]
+}
+
 harness_build_planner_prompt() {
   local product_prompt="$1"
-  local mode
   local brief_context=""
-  local mode_instructions
   local persona
 
-  mode="$(harness_get_planner_mode)"
-  mode_instructions="$(harness_planner_mode_instructions "$mode")"
   brief_context="$(collect_design_brief_context || true)"
   persona="$(cat agents/planner.md)"
 
@@ -769,36 +690,13 @@ harness_build_planner_prompt() {
   printf '%s\n' "$LESSONS_CONTEXT"
   printf '%s\n' "Read harness/workspace-template.md for optional domain-scoped monorepo layout."
   printf '%s\n' "Read all criteria files in agents/criteria/ to understand what the evaluator will grade."
-  printf '%s\n' "Read docs/templates/design-options.md when in design-scout mode."
   printf '%s\n' "If design/references/ contains images, read/view them before defining the design language."
-  printf '\n%s\n\n' "$mode_instructions"
+  printf '\n%s\n\n' "$(harness_planner_mode_instructions)"
   if [ -n "$brief_context" ]; then
     printf '%s\n\n' "$brief_context"
   fi
   printf '%s\n' "Prompt: $product_prompt"
   printf '%s\n' "$HARNESS_AUTONOMOUS_SUFFIX"
-}
-
-harness_handle_design_scout_complete() {
-  if ! harness_is_design_scout_complete; then
-    return 1
-  fi
-
-  echo ""
-  echo "▶ DESIGN SCOUT COMPLETE"
-  echo "  Three design directions written to docs/design-options.md"
-  echo ""
-  echo "  Next steps:"
-  echo "    1. Review docs/design-options.md"
-  echo "    2. Create design/selected-direction.md with your pick (e.g. 'Option B — Momentum Dark')"
-  echo "    3. Re-run: ./opencode-harness.sh \"<same prompt>\""
-  echo ""
-
-  if harness_should_pause_design; then
-    harness_prompt_continue "design direction selection" ""
-  fi
-
-  exit 0
 }
 
 # ─── Shared agent context blocks ─────────────────────────────────────
@@ -961,7 +859,7 @@ harness_post_qa_write() {
 
 harness_run_planning_phase() {
   local product_prompt="${1:?product prompt required}"
-  local current planner_mode
+  local current
 
   if harness_is_planning_complete; then
     echo ""
@@ -972,13 +870,9 @@ harness_run_planning_phase() {
       exit 0
     fi
     echo "  Resuming from sprint $current"
-  elif harness_is_design_scout_complete && ! harness_has_selected_direction; then
-    harness_handle_design_scout_complete
   else
     echo ""
     echo "▶ PHASE 1: PLANNER"
-    planner_mode="$(harness_get_planner_mode)"
-    echo "  Planner mode: $planner_mode"
     echo "  Expanding prompt into product spec..."
     echo ""
 
@@ -988,24 +882,16 @@ harness_run_planning_phase() {
 
     validate_phase planner 1
 
-    if [ "$planner_mode" = "scout" ]; then
-      if [ ! -f docs/design-options.md ]; then
-        echo "ERROR: Planner did not produce docs/design-options.md"
-        exit 1
-      fi
-      harness_handle_design_scout_complete
-    else
-      if [ ! -f docs/spec.md ]; then
-        echo "ERROR: Planner did not produce docs/spec.md"
-        exit 1
-      fi
-
-      write_handoff planner 1 1 run-generator \
-        "docs/spec.md,docs/sprint-plan.md,docs/sprint-status.md,AGENTS.md"
-
-      echo ""
-      echo "✓ Spec written to docs/spec.md"
+    if [ ! -f docs/spec.md ]; then
+      echo "ERROR: Planner did not produce docs/spec.md"
+      exit 1
     fi
+
+    write_handoff planner 1 1 run-generator \
+      "docs/spec.md,docs/sprint-plan.md,docs/sprint-status.md,AGENTS.md"
+
+    echo ""
+    echo "✓ Spec written to docs/spec.md"
   fi
 }
 

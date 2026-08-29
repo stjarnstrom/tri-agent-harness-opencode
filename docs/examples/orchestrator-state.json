@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "startedAt": "2026-08-15T12:00:00.000Z",
+  "updatedAt": "2026-08-15T14:32:01.000Z",
+  "productPrompt": "Build Taskflow, a habit tracker with streak analytics",
+  "currentSprint": 2,
+  "qaRounds": {
+    "2": 1
+  },
+  "cycleAttempts": {
+    "2": 1
+  },
+  "lastCompletedPhase": "evaluator",
+  "lastRun": {
+    "phase": "evaluator",
+    "sprint": 2,
+    "qaRound": 1,
+    "source": "opencode-harness.sh"
+  },
+  "retro": {
+    "completedAt": "2026-08-15T16:00:00.000Z",
+    "processedReports": [
+      "docs/qa-report-sprint-1.md",
+      "docs/qa-report-sprint-2.md"
+    ]
+  }
+}
