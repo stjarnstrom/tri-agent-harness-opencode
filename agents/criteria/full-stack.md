@@ -34,7 +34,7 @@ recognize this as something they'd actually use?
 
 ## Visual Design
 
-(See `criteria/frontend-design.md` for the full breakdown.)
+(See `extras/frontend-design-criteria.md` for the full breakdown — copy into `agents/criteria/` if you want it scored separately.)
 
 Apply all four criteria: Design Quality, Originality, Craft, Functionality.
 

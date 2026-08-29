@@ -46,24 +46,15 @@ Do specify:
 - Key API surface if full-stack (what the frontend needs from the backend)
 - AI feature design (what Claude does, when it's invoked, what it returns)
 
-### 4. Design input (check before defining the visual language)
+### 4. Design input (optional)
 
-Before committing to a design direction, check for user-provided input:
+Before committing to a visual direction, check for user-provided input:
 
 1. **`design/brief.md`** and **`design/constraints.md`** — authoritative; follow exactly
 2. **Legacy `brand-guidelines.md`** (project root or `agents/`) — same authority as brief
 3. **`design/references/`** — read/view image assets (png, jpg, webp, svg); cite which reference influenced which choice in the spec
-4. **`design/selected-direction.md`** + **`docs/design-options.md`** — user picked a scout option; merge that choice into the final spec (binding)
 
-**Mode selection:**
-
-| Condition | Mode | Output |
-|-----------|------|--------|
-| User brief or references present | Full plan | `docs/spec.md`, sprint plan, status, `AGENTS.md` |
-| `design/selected-direction.md` + `docs/design-options.md` | Finalize | Full planning artifacts using the selected direction |
-| No design input | Design scout | **Only** `docs/design-options.md` (3 options) — stop |
-
-When a user brief exists, expand only where the user was silent — never invent a competing direction. In the Design Language section, note which reference assets or brief sections drove key choices.
+When a user brief exists, expand only where the user was silent — never invent a competing direction. With no brief, define the design language in `docs/spec.md` from the product prompt. In the Design Language section, note which reference assets or brief sections drove key choices.
 
 ### 5. Define a visual design language
 

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-15T14:32:01.000Z",
+  "sourceWorkflow": "opencode-harness.sh",
+  "lastCompletedPhase": "evaluator",
+  "targetSprint": 2,
+  "qaRound": 1,
+  "expectedNextAction": "run-generator",
+  "artifactsWritten": [
+    "docs/qa-report-sprint-2.md",
+    "docs/sprint-status.md"
+  ],
+  "notes": "Recorded by opencode-harness.sh (autonomous loop). Example only."
+}

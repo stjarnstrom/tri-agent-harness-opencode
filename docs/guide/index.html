@@ -284,6 +284,7 @@
       <a href="#loop">The loop</a>
       <a href="#agents">Agents</a>
       <a href="#quickstart">Start a product</a>
+      <a href="#preplan">Pre-plan</a>
       <a href="#run">A run</a>
       <a href="#modes">Modes</a>
       <a href="#artifacts">Artifacts</a>
@@ -301,13 +302,13 @@
     <p class="thesis">
       The harness turns a short product prompt into a working app by
       <strong>separating creation from judgment</strong>: one agent plans, one
-      builds, one grades the running app with a skeptical eye — and a fourth
-      distills every failure into lessons, so <strong>each run starts smarter
+      builds, one grades the running app with a skeptical eye. Recurring QA
+      failures feed the anti-slop loop, so <strong>each run starts smarter
       than the last</strong>.
     </p>
     <p class="doc-meta">
-      <span>docs/guide.html</span>
-      <span>updated 2026-07-17</span>
+      <span>docs/guide/</span>
+      <span>updated 2026-08-29</span>
       <span>zero dependencies</span>
     </p>
   </div>
@@ -316,7 +317,7 @@
   <section id="loop">
     <div class="wrap">
       <span class="eyebrow">The machine</span>
-      <h2>Four agents, one circuit</h2>
+      <h2>Three agents, one circuit</h2>
       <p class="lead-in">
         Every sprint travels the same circuit. The Generator never has final
         say on its own work: a mechanical gate checks lints and artifacts, then
@@ -415,8 +416,8 @@
           <h3>Planner</h3>
           <span class="tech">anthropic/claude-sonnet-4-5</span>
           <p>Expands your one-line prompt into a full spec, sprint plan, and
-          status tracker. With no design brief, it first proposes three design
-          directions and waits for your pick.</p>
+          status tracker. With no design brief, it defines the visual language
+          in <code>docs/spec.md</code> from your product prompt.</p>
         </div>
         <div class="card">
           <h3>Generator</h3>
@@ -528,10 +529,13 @@
             <p>
               Copy <code>docs/templates/design-brief.md</code> to
               <code>design/brief.md</code> if you already know the visual
-              direction. With an empty <code>design/</code>, the Planner writes
-              three options to <code>docs/design-options.md</code> and pauses —
-              put your pick in <code>design/selected-direction.md</code> and
-              re-run the same command.
+              direction. With an empty <code>design/</code>, the Planner defines
+              the design language in <code>docs/spec.md</code> from your prompt.
+            </p>
+            <p>
+              Bringing a full product plan from another chat? That helps —
+              see <a href="#preplan">Planning with another agent</a> for what
+              to keep vs strip before you paste it into the prompt.
             </p>
           </div>
         </div>
@@ -559,6 +563,62 @@
         <a href="#fieldnotes">Field notes</a>. Autonomy uses
         <code>--dangerously-skip-permissions</code> — hooks catch bad commits,
         not bad commands.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PRE-PLAN FROM ANOTHER AGENT ================= -->
+  <section id="preplan">
+    <div class="wrap">
+      <span class="eyebrow">Input shape</span>
+      <h2>Planning with another agent</h2>
+      <p class="lead-in">
+        The prompt you pass to <code>./opencode-harness.sh</code> does not have
+        to be a one-liner. A product plan drafted in another chat or agent usually
+        <strong>helps</strong> the Planner — richer intent means fewer
+        invented requirements. It does <strong>not</strong> change the
+        harness architecture: the Planner still writes the canonical
+        <code>docs/spec.md</code> and sprint plan.
+      </p>
+
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead>
+            <tr><th>In your pre-plan</th><th>Effect</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Product goals, users, features, UX flows</td>
+              <td>Helps — better input for the spec</td>
+            </tr>
+            <tr>
+              <td>Design direction / brand rules</td>
+              <td>Prefer <code>design/brief.md</code> (authoritative) over burying it in the prompt</td>
+            </tr>
+            <tr>
+              <td>Non-negotiable constraints</td>
+              <td>Prefer <code>design/constraints.md</code>, or say explicitly “do not expand beyond this scope”</td>
+            </tr>
+            <tr>
+              <td>Stack, file layouts, “implement X with Y”</td>
+              <td>Risk — Planner stays high-level; wrong implementation detail cascades to Generator</td>
+            </tr>
+            <tr>
+              <td>Pre-cut sprints</td>
+              <td>Hints only — Planner re-slices into the harness shape (typically 4–8 sprints; Sprint 1 = skeleton)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        <strong>Practical recipe:</strong> keep the other agent’s output as a
+        product brief, strip implementation prescriptions, park visuals in
+        <code>design/brief.md</code>, then run the harness. The Planner may
+        still ambition-expand unless you constrain it — that is intentional,
+        but easy to overshoot on cost. See
+        <a href="#quickstart">Starting a product</a> for caps like
+        <code>HARNESS_MAX_SPRINTS_PER_RUN=1</code>.
       </p>
     </div>
   </section>
@@ -593,8 +653,8 @@
           <span class="tplus">1–5 min</span>
           <h3>Pre-QA gate</h3>
           <p>Deterministic checks — lints, required artifacts — before any
-          expensive judgment. A gate failure returns to the Generator without
-          consuming a QA round.</p>
+          expensive judgment. A gate failure returns to the Generator and
+          consumes a QA round, same as an Evaluator failure.</p>
           <span class="wire">docs/mechanical-checks-sprint-N.md</span>
         </div>
         <div class="event judge-dot">
@@ -825,11 +885,12 @@
             <tr><th>Variable</th><th>Default</th><th>What it does</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>HARNESS_PAUSE</code></td><td><code>off</code> · <code>sprint</code> on a fresh project</td><td><code>sprint</code> asks before each sprint; <code>phase</code> before every agent; <code>design</code> after design-scout</td></tr>
+            <tr><td><code>HARNESS_PAUSE</code></td><td><code>off</code> · <code>sprint</code> on a fresh project</td><td><code>sprint</code> asks before each sprint; <code>phase</code> before every agent</td></tr>
             <tr><td><code>HARNESS_MAX_SPRINTS_PER_RUN</code></td><td>unlimited</td><td>Stop cleanly after N sprints; re-run to resume</td></tr>
             <tr><td><code>HARNESS_ON_MAX_ROUNDS</code></td><td><code>halt</code></td><td><code>advance</code> marks a stuck sprint Skipped and moves on</td></tr>
-            <tr><td><code>HARNESS_MODEL</code></td><td><code>anthropic/claude-sonnet-4-5</code></td><td>Cursor model for all phases</td></tr>
+            <tr><td><code>HARNESS_MODEL</code></td><td><code>anthropic/claude-sonnet-4-5</code></td><td>OpenCode model for all phases</td></tr>
             <tr><td><code>HARNESS_AGENT_WATCHDOG</code></td><td><code>1</code></td><td>Stop hung <code>opencode run</code> when artifacts land</td></tr>
+            <tr><td><code>HARNESS_OPENCODE_ATTACH</code></td><td>—</td><td>Attach to <code>opencode serve</code> URL</td></tr>
             <tr><td><code>HARNESS_YES</code></td><td><code>0</code></td><td><code>1</code> skips all pause prompts (fully autonomous)</td></tr>
             <tr><td><code>HARNESS_USAGE_CHECK</code></td><td><code>0</code></td><td>Run a budget probe at sprint boundaries</td></tr>
           </tbody>
@@ -841,10 +902,12 @@
   <footer>
     <div class="wrap">
       <p>
-        Deeper reading: <a href="../README.md">README</a> ·
-        <a href="runtime-contract.md">runtime contract</a> ·
-        <a href="../harness/AGENT-INSTRUCTIONS.md">agent instructions</a> ·
-        <a href="../harness/LESSONS.md">current lessons</a>
+        Deeper reading: <a href="../../README.md">README</a> ·
+        <a href="../CHEATSHEET.md">cheat sheet</a> ·
+        <a href="../examples/README.md">example artifacts</a> ·
+        <a href="../runtime-contract.md">runtime contract</a> ·
+        <a href="../../harness/AGENT-INSTRUCTIONS.md">agent instructions</a> ·
+        <a href="../../harness/LESSONS.md">current lessons</a>
       </p>
     </div>
   </footer>

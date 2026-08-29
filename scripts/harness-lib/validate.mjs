@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { isDesignScoutComplete } from "./design-brief.mjs";
 import { fileExists } from "./fs-utils.mjs";
 import { readSprintRows, SPRINT_STATUS_FILE } from "./sprint-status.mjs";
 
@@ -66,13 +65,6 @@ export async function assertPhaseOutputs(phase, sprint = 1) {
 
   if (!Number.isInteger(sprint) || sprint < 1) {
     throw new Error("sprint must be a positive integer.");
-  }
-
-  if (phase === "planner" && (await isDesignScoutComplete())) {
-    if (!(await fileExists("docs/design-options.md"))) {
-      throw new Error("planner design-scout validation failed. Missing: docs/design-options.md");
-    }
-    return { phase, sprint, ok: true, mode: "scout" };
   }
 
   const required = requiredFilesForPhase(phase, sprint);

@@ -156,7 +156,11 @@ cd app && npx playwright test   # app E2E (after Generator scaffolds test:e2e)
 - Sprint contracts: `docs/sprint-[N]-contract.md`
 - Mechanical checks: `docs/mechanical-checks-sprint-[N].md`
 - QA reports: `docs/qa-report-sprint-[N].md`
+- Field guide: [`docs/guide/`](docs/guide/) · [GitHub Pages](https://stjarnstrom.github.io/tri-agent-harness-opencode/guide/)
+- Cheat sheet: `docs/CHEATSHEET.md`
+- Example artifacts: `docs/examples/`
 - Product root: `app/README.md`
+- Sibling harnesses: [Claude Code](https://github.com/stjarnstrom/tri-agent-harness) · [Cursor CLI](https://github.com/stjarnstrom/tri-agent-harness-cursor)
 
 ---
 
